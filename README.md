@@ -1,2 +1,3 @@
-# project15-openplatform-webapp
-Sample WebApp for Project 15 Open Platform
+# Sample Web app for IoT Plug and Play workshop
+
+[IoT Plug and Play workshop](https://github.com/microsoft/IoT-Plug-and-Play-Workshop)
