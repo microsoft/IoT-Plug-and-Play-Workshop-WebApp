@@ -200,12 +200,12 @@
             <tr>
                 <td class="sidenavFas">
                     <div class="sidenavTooltip">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-clipboard"></i>
                         <span class="tooltiptext">ID Scope of DPS</span>
                     </div>
                 </td>
                 <td>
-                    <label class="sidenavLabel">ID Scope</label>
+                    <button type="button" id="btnDpsIdScopeCopy" class="sidenavButton">Copy ID Scope</button>
                 </td>
                 <td>
                     <div>
@@ -711,6 +711,11 @@ Script block to update Telemetry/Events grid
         //
         // Device Provisioning sidenav
         //
+        $("#btnDpsIdScopeCopy").click(function () {
+            console.log("Dps ID Scope : " + enrollmentKeyPrimary);
+            navigator.clipboard.writeText(`@ViewData["DpsIdScope"]`);
+        })
+
         $("#btnDpsPrimaryKeyCopy").click(function () {
             console.log("Dps Primary Key : " + enrollmentKeyPrimary);
             navigator.clipboard.writeText(enrollmentKeyPrimary);
@@ -970,6 +975,7 @@ Script block to update Telemetry/Events grid
         //
         var enableDisableEnrollmentButtons = function (disableButton) {
             document.getElementById("btnDeleteDpsEnrollment").disabled = disableButton;
+            document.getElementById("btnDpsIdScopeCopy").disabled = disableButton;
             document.getElementById("btnDpsPrimaryKeyCopy").disabled = disableButton;
             document.getElementById("btnDpsSecondaryKeyCopy").disabled = disableButton;
         }
