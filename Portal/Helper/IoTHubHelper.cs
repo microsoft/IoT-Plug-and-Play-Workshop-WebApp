@@ -290,6 +290,7 @@ namespace Portal.Helper
             {
                 Attestation attestation = new SymmetricKeyAttestation(primaryKey, secondaryKey);
                 IndividualEnrollment individualEnrollment = new IndividualEnrollment(newRegistrationId, attestation);
+                individualEnrollment.DeviceId = newRegistrationId;
                 var newEnrollment = await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
 
                 bCreated = true;
