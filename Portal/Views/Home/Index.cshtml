@@ -615,6 +615,7 @@ Script block to update Telemetry/Events grid
 
                             if (document.getElementById('txtCoordinates').innerHTML != txtCoordinates) {
 
+                                map.marker.clear();
                                 marker = new atlas.HtmlMarker({
                                     htmlContent: '<div class="pulseIcon"></div>',
                                     position: [lng, lat]
