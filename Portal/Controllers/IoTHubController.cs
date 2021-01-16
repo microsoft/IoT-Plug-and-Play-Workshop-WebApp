@@ -130,6 +130,42 @@ namespace Portal.Controllers
                     {
                         TELEMETRY_DATA data = new TELEMETRY_DATA();
                         DTTelemetryInfo telemetryInfo = dt.Value as DTTelemetryInfo;
+
+
+                        switch (telemetryInfo.Schema.EntityKind)
+                        {
+                            case DTEntityKind.Integer:
+                            case DTEntityKind.Long:
+                                // for TSI in WebUI
+                                data.dataType = "Long";
+                                break;
+                            case DTEntityKind.Double:
+                            case DTEntityKind.Float:
+                                // for TSI in WebUI
+                                data.dataType = "Double";
+                                break;
+                            case DTEntityKind.Object:
+                                // for now we support point object for location
+
+                                if (telemetryInfo.Schema.Id.Versionless.Equals("dtmi:standard:schema:geospatial:point"))
+                                {
+                                    data.TelemetryType = telemetryInfo.Schema.Id.Versionless;
+                                    break;
+                                }
+                                continue;
+
+                            default:
+                                continue;
+                        }
+
+                        if (telemetryInfo.SupplementalTypes.Count > 0)
+                        {
+                            foreach (var supplementalType in telemetryInfo.SupplementalTypes)
+                            {
+                                data.TelemetryType = supplementalType.Versionless;
+                            }
+                        }
+
                         if (telemetryInfo.DisplayName.Count > 0)
                         {
                             data.TelemetryDisplayName = telemetryInfo.DisplayName["en"];
@@ -144,9 +180,7 @@ namespace Portal.Controllers
                             }
                         }
 
-                        data.dataType = telemetryInfo.Schema.EntityKind == DTEntityKind.Integer ? "Long" : "Double";
                         data.TelemetryName = telemetryInfo.Name;
-                        //data.TelemetryType = telemetryInfo.Schema;
                         deviceData.telemetry.Add(data);
                     }
                 }
