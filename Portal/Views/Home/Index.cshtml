@@ -274,12 +274,15 @@ Main Page
     Azure Map
     --------------------------------------------------->
     <fieldset>
-        <legend><strong>Azure Map</strong></legend>
+        <legend><strong>Azure Maps</strong></legend>
         <div id="locationLegend" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
             &nbsp;
         </div>
         <div id="txtCoordinates" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
             &nbsp;
+        </div>
+        <div id="btnIndoorMap" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
+            <button type="button" id="btnSetIndoorMap"><i class="fas fa-sync"></i>Indoor Map</button>
         </div>
         <div style="width:auto;overflow:auto;">
             <div id="map-id" style="width:100%;min-width: 1024px; min-height: 480px; width: inherit; height: 30vh;"></div>
@@ -813,6 +816,12 @@ Script block to update Telemetry/Events grid
                 });
             }
         })
+
+        $('#btnSetIndoorMap').click(function () {
+            map.setCamera({
+                center: [-122.139192, 47.647472]
+            });
+        });
 
         //
         // Adds a new IoT Device to IoT Hub
