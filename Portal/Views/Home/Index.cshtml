@@ -522,7 +522,7 @@ Script block to update Telemetry/Events grid
             // Initialize Azure Map
             map = new atlas.Map('map-id', {
                 center: [-122.139192, 47.647472],
-                zoom: 19,
+                zoom: 1,
                 language: 'en-US',
                 showLogo: false,
                 renderWorldCopies: true,
@@ -819,7 +819,8 @@ Script block to update Telemetry/Events grid
 
         $('#btnSetIndoorMap').click(function () {
             map.setCamera({
-                center: [-122.139192, 47.647472]
+                center: [-122.139192, 47.647472],
+                zoom: 19
             });
         });
 
