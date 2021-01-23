@@ -281,7 +281,7 @@ Main Page
         <div id="txtCoordinates" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
             &nbsp;
         </div>
-        <div id="btnIndoorMap" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
+        <div id="divIndoorMap" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:none">
             <button type="button" id="btnSetIndoorMap"><i class="fas fa-sync"></i>Indoor Map</button>
         </div>
         <div style="width:auto;overflow:auto;">
@@ -574,6 +574,8 @@ Script block to update Telemetry/Events grid
                     },
                     []);
                 });
+
+                document.getElementById('divIndoorMap').style.display = 'inline';
             }
 
             map.controls.add([
