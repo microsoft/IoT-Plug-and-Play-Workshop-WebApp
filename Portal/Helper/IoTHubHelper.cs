@@ -296,7 +296,8 @@ namespace Portal.Helper
                 if (!string.IsNullOrEmpty(_dps_webhookUrl))
                 {
                     individualEnrollment.CustomAllocationDefinition = new CustomAllocationDefinition() { WebhookUrl = _dps_webhookUrl, ApiVersion = "2019-03-31" };
-                    }
+                    individualEnrollment.AllocationPolicy = AllocationPolicy.Custom;
+                }
                 var newEnrollment = await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
 
                 bCreated = true;
