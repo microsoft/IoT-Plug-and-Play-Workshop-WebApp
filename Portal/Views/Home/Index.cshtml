@@ -281,7 +281,7 @@ Main Page
         <div id="txtCoordinates" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
             &nbsp;
         </div>
-        <div id="divIndoorMap" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:none">
+        <div id="divIndoorMap" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
             <button type="button" id="btnSetIndoorMap"><i class="fas fa-sync"></i>Indoor Map</button>
         </div>
         <div style="width:auto;overflow:auto;">
@@ -629,7 +629,8 @@ Script block to update Telemetry/Events grid
                                 map.markers.add(marker);
 
                                 map.setCamera({
-                                    center: [lng, lat]
+                                    center: [lng, lat],
+                                    zoom:13
                                 });
 
                                 document.getElementById('txtCoordinates').innerHTML = txtCoordinates;
