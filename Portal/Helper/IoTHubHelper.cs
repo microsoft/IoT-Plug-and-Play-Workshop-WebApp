@@ -391,7 +391,8 @@ namespace Portal.Helper
             if (status == ConnectionStatus.Connected)
             {
                 _isConnected = true;
-            } else
+            }
+            else
             {
                 _isConnected = false;
             }
@@ -416,7 +417,8 @@ namespace Portal.Helper
             }
             else if (_serviceClient != null)
             {
-                var methodInvocation = new CloudToDeviceMethod(command) {
+                var methodInvocation = new CloudToDeviceMethod(command)
+                {
                     ResponseTimeout = TimeSpan.FromSeconds(30)
                 };
                 methodInvocation.SetPayloadJson(payload);
