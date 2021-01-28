@@ -276,13 +276,13 @@ Main Page
     <fieldset>
         <legend><strong>Azure Maps</strong></legend>
         <div id="locationLegend" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
-            &nbsp;
+            <button type="button" id="btnLocationLegend">&nbsp;</button>
         </div>
         <div id="txtCoordinates" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
             &nbsp;
         </div>
         <div id="divIndoorMap" style="width:inherit;overflow-x:scroll; white-space:nowrap;display:inline">
-            <button type="button" id="btnSetIndoorMap"><i class="fas fa-sync"></i>Indoor Map</button>
+            <button type="button" id="btnSetIndoorMap"><i class="fas fa-map-marker-alt"></i>Indoor Map</button>
         </div>
         <div style="width:auto;overflow:auto;">
             <div id="map-id" style="width:100%;min-width: 1024px; min-height: 480px; width: inherit; height: 30vh;"></div>
@@ -306,6 +306,8 @@ Main Page
                 <option>Double</option>
                 <option>Long</option>
             </select>
+            <label style="font-weight:400">Telemetry Interval (Minutes)</label>
+            <input type="text" id="telemetryInterval" placeholder="Enter interval in minutes" style="padding-left: 5px; min-width: 10em; height: 2.0em;display:inline">
         </div>
         <div id="tsiNonPnP" style="display: none; text-align:left; position:relative;top:30%;z-index:1;color:red;">
             <div id="tsiNonPnPMsg">Non IoT Plug and Play Device.</div>
@@ -628,12 +630,22 @@ Script block to update Telemetry/Events grid
 
                                 map.markers.add(marker);
 
-                                map.setCamera({
-                                    center: [lng, lat],
-                                    zoom:13
-                                });
+                                var txtCoordinatesDiv = document.getElementById('txtCoordinates');
+                                var btnLocation = document.getElementById('btnLocationLegend');
 
-                                document.getElementById('txtCoordinates').innerHTML = txtCoordinates;
+                                console.log("DeviceTelemetry Location : " + txtCoordinatesDiv.innerHTML);
+
+                                if (txtCoordinatesDiv.innerHTML == "&nbsp;") {
+                                    btnLocation.disabled = true;
+                                    map.setCamera({
+                                        center: [lng, lat],
+                                        zoom: 13
+                                    });
+                                } else {
+                                    btnLocation.disabled = false;
+                                }
+
+                                txtCoordinatesDiv.innerHTML = txtCoordinates;
                             }
                         }
                     }
@@ -660,7 +672,7 @@ Script block to update Telemetry/Events grid
             hubConnection.on('EventGrid', function (payload) {
                 var jsonData = JSON.parse(payload)
                 addEvent(jsonData.eventId, jsonData.eventType, jsonData.deviceId, jsonData.dtDataSchema, jsonData.eventSource, jsonData.eventTime, jsonData.data);
-                console.log("Event Grid " + jsonData.eventSource);
+                //console.log("Event Grid " + jsonData.eventSource);
                 if (jsonData.eventSource == 'Microsoft.Devices.DeviceCreated') {
                     console.log("Device Added");
                     var newOption = "<option value='" + jsonData.deviceId + "'>" + jsonData.deviceId + "</option>";
@@ -826,6 +838,21 @@ Script block to update Telemetry/Events grid
             }
         })
 
+        $('#btnLocationLegend').click(function () {
+            console.log("btnLocationLegend click");
+            var coordinates = document.getElementById('txtCoordinates').innerHTML
+            if (coordinates != '&nbsp;') {
+                var lng = parseFloat(coordinates.split(",")[0]);
+                var lat = parseFloat(coordinates.split(",")[1]);
+
+                map.setCamera({
+                    center: [lng, lat]
+                });
+            } else {
+                //console.log("No Location");
+            }
+        });
+
         $('#btnSetIndoorMap').click(function () {
             map.setCamera({
                 center: [-122.139192, 47.647472],
@@ -906,11 +933,18 @@ Script block to update Telemetry/Events grid
         });
 
         var UpdateLocationInfo = function (dataName, displayName, coordinates) {
+            var btnLocation = document.getElementById('btnLocationLegend');
             locationDataName = dataName;
-            document.getElementById('locationLegend').innerHTML = displayName;
+            btnLocation.innerHTML = displayName;
             document.getElementById('txtCoordinates').innerHTML = coordinates;
             if (dataName.length == 0) {
+                btnLocation.disabled = true;
+                btnLocation.style.display = 'none';
                 map.markers.clear();
+            } else {
+                btnLocation.style.display = 'inline';
+                var buttonText = '<i class="fas fa-map-marker-alt"></i>' + displayName;
+                btnLocation.innerHTML = buttonText;
             }
         }
 
@@ -1205,11 +1239,17 @@ Script block to update Telemetry/Events grid
             }
 
             var dataName = '$event.' + telemetryName + '.' + telemetryUnit
+            var interval = document.getElementById('telemetryInterval').value;
+            //console.log("runTsqPnP data name : " + dataName);
 
-            console.log("runTsqPnP data name : " + dataName);
-
+            if (interval) {
+                console.log("Interval : " + document.getElementById('telemetryInterval').value);
+            }
+            else {
+                interval = 10;
+            }
             var endDate = new Date();
-            var startDate = new Date(endDate.valueOf() - 1000 * 60 * 10);
+            var startDate = new Date(endDate.valueOf() - 1000 * 60 * interval);
 
             //https://github.com/microsoft/tsiclient/blob/b19d9f0078c8ed3104b9d664f05551664a5ae602/docs/UX.md#chart-options
 
