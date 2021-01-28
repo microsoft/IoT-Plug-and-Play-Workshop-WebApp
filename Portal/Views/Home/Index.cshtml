@@ -989,7 +989,11 @@ Script block to update Telemetry/Events grid
                         }
                         else {
                             var option = document.createElement('option');
-                            option.text = json.telemetry[i].telemetryDisplayName + " (" + json.telemetry[i].unit + ")  ";
+                            if (json.telemetry[i].unit) {
+                                option.text = json.telemetry[i].telemetryDisplayName + " (" + json.telemetry[i].unit + ")  ";
+                            } else {
+                                option.text = json.telemetry[i].telemetryDisplayName";
+                            }
                             option.value = json.telemetry[i].telemetryName + ";" + json.telemetry[i].dataType;
                             options.push(option.outerHTML);
                         }
