@@ -35,7 +35,8 @@ namespace Portal.Models
         public string repoUrl { get; set; }
     }
 
-    public class GitHubSetting { 
+    public class GitHubSetting
+    {
         public string token { get; set; }
     }
 
