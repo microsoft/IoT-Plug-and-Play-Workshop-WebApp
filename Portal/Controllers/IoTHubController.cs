@@ -179,6 +179,25 @@ namespace Portal.Controllers
                                 data.unit = unitInfo.Symbol;
                             }
                         }
+                        else
+                        {
+                            // No Unit
+                            if (deviceData.deviceModelId.StartsWith("dtmi:seeedkk:wioterminal:wioterminal_co2checker"))
+                            {
+                                if (telemetryInfo.Name.Equals("co2"))
+                                {
+                                    data.unit = "PPM";
+                                }
+                                else if (telemetryInfo.Name.Equals("humi"))
+                                {
+                                    data.unit = "%";
+                                }
+                                else if (telemetryInfo.Name.Equals("wbgt"))
+                                {
+                                    data.unit = "°C";
+                                }
+                            }
+                        }
 
                         data.TelemetryName = telemetryInfo.Name;
                         deviceData.telemetry.Add(data);

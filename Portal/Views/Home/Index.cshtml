@@ -670,6 +670,12 @@ Script block to update Telemetry/Events grid
                 else if (jsonData.eventSource == 'Microsoft.Devices.DeviceDeleted') {
                     console.log("Device Removed");
                 }
+                else if (jsonData.eventSource == 'Microsoft.Devices.DeviceConnected') {
+                    console.log("DeviceConnected");
+                }
+                else if (jsonData.eventSource == 'Microsoft.Devices.DeviceDisconnected') {
+                    console.log("DeviceDisconnected");
+                }
             });
 
             enableDisableDeviceButtons(true);
@@ -992,7 +998,7 @@ Script block to update Telemetry/Events grid
                             if (json.telemetry[i].unit) {
                                 option.text = json.telemetry[i].telemetryDisplayName + " (" + json.telemetry[i].unit + ")  ";
                             } else {
-                                option.text = json.telemetry[i].telemetryDisplayName";
+                                option.text = json.telemetry[i].telemetryDisplayName;
                             }
                             option.value = json.telemetry[i].telemetryName + ";" + json.telemetry[i].dataType;
                             options.push(option.outerHTML);
