@@ -671,7 +671,10 @@ Script block to update Telemetry/Events grid
                     console.log("Device Removed");
                 }
                 else if ((jsonData.eventSource == 'Microsoft.Devices.DeviceConnected') || (jsonData.eventSource == 'Microsoft.Devices.DeviceDisconnected')) {
-                    getDeviceInfo(jsonData.deviceId);
+                    var targetDeviceId = $("#DeviceList option:selected").text();
+                    if (targetDeviceId == jsonData.deviceId) {
+                        getDeviceInfo(jsonData.deviceId);
+                    }
                 }
             });
 
