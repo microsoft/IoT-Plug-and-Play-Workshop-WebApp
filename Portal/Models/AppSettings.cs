@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 namespace Portal.Models
 {
-
     public class IotHubSetting
     {
         public string ConnectionString { get; set; }

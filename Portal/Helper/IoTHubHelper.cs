@@ -1,24 +1,20 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Provisioning.Service;
 using Microsoft.Azure.Devices.Shared;
+using Microsoft.Azure.DigitalTwins.Parser;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Rest;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Portal.Models;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
 using System.Linq;
-using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Portal.Helper
@@ -34,6 +30,8 @@ namespace Portal.Helper
         Task<IndividualEnrollment> GetDpsEnrollment(string registrationId);
         Task<AttestationMechanism> GetDpsAttestationMechanism(string registrationId);
         Task<bool> AddDpsEnrollment(string newRegistrationId);
+        Task<bool> AddDpsGroupEnrollment(StringBuilder certContents);
+        Task<bool> AddDpsGroupEnrollment(string certPath);
         Task<bool> DeleteDpsEnrollment(string registrationId);
         Task<CloudToDeviceMethodResult> SendMethod(string deviceId, string command, string payload);
         string GetIoTHubName(string deviceConnectionString);
@@ -49,6 +47,8 @@ namespace Portal.Helper
         private readonly DigitalTwinClient _digitalTwinClient;
         private readonly ProvisioningServiceClient _provisioningServiceClient;
         private readonly string _dps_webhookUrl;
+        private readonly string _privateModelRepoUrl;
+        private readonly string _privateModelToken;
 
         public IoTHubHelper(IOptions<AppSettings> config, ILogger<IoTHubHelper> logger)
         {
@@ -61,6 +61,8 @@ namespace Portal.Helper
             _dps_webhookUrl = _appSettings.Dps.WebHookUrl;
             _deviceClient = null;
             _isConnected = false;
+            _privateModelRepoUrl = _appSettings.ModelRepository.repoUrl;
+            _privateModelToken = _appSettings.GitHub.token;
         }
 
         #region IOTHUB
@@ -331,7 +333,62 @@ namespace Portal.Helper
             return bDeleted;
         }
 
+        /**********************************************************************************
+         * Upload CA for proof of possession
+         *********************************************************************************/
+        public async Task<bool> AddDpsGroupEnrollment(string certPath)
+        {
+            try
+            {
+                var certificate = new X509Certificate2(certPath);
+                Attestation attestation = X509Attestation.CreateFromRootCertificates(certificate);
+                EnrollmentGroup enrollmentGroup =
+                    new EnrollmentGroup(
+                            "Test",
+                            attestation)
+                    {
+                        ProvisioningStatus = ProvisioningStatus.Enabled
+                    };
+
+                EnrollmentGroup enrollmentGroupResult =
+                await _provisioningServiceClient.CreateOrUpdateEnrollmentGroupAsync(enrollmentGroup).ConfigureAwait(false);
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in DeleteDpsEnrollment() : {e.Message}");
+            }
+            return false;
+        }
+        public async Task<bool> AddDpsGroupEnrollment(StringBuilder certContents)
+        {
+            try
+            {
+                byte[] byteArray = ASCIIEncoding.ASCII.GetBytes(certContents.ToString());
+                var certificate = new X509Certificate2(byteArray);
+                Attestation attestation = X509Attestation.CreateFromRootCertificates(certificate);
+                EnrollmentGroup enrollmentGroup =
+                    new EnrollmentGroup(
+                            "Test",
+                            attestation)
+                    {
+                        ProvisioningStatus = ProvisioningStatus.Enabled
+                    };
+
+                EnrollmentGroup enrollmentGroupResult =
+                await _provisioningServiceClient.CreateOrUpdateEnrollmentGroupAsync(enrollmentGroup).ConfigureAwait(false);
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in DeleteDpsEnrollment() : {e.Message}");
+            }
+            return false;
+        }
+
         #endregion
+
+
 
         public async Task<Twin> SetModelId(string deviceConnectionString, string deviceModelId)
         {
@@ -400,32 +457,78 @@ namespace Portal.Helper
 
         public async Task<CloudToDeviceMethodResult> SendMethod(string deviceId, string command, string payload)
         {
-            if (_digitalTwinClient != null)
-            {
-                try
-                {
-                    HttpOperationResponse<DigitalTwinCommandResponse, DigitalTwinInvokeCommandHeaders> invokeCommandResponse = await _digitalTwinClient
-                        .InvokeCommandAsync(deviceId, command, payload);
-                }
-                catch (HttpOperationException e)
-                {
-                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
-                    {
-                    }
-                }
+            JObject cmdPayload = JObject.Parse(payload);
 
-            }
-            else if (_serviceClient != null)
+            if (_serviceClient != null)
             {
                 var methodInvocation = new CloudToDeviceMethod(command)
                 {
                     ResponseTimeout = TimeSpan.FromSeconds(30)
                 };
-                methodInvocation.SetPayloadJson(payload);
-                var response = await _serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
-                Console.WriteLine("Response status: {0}, payload:", response.Status);
-                Console.WriteLine(response.GetPayloadAsJson());
-                return response;
+
+                Twin deviceTwin = await GetDeviceTwin(deviceId);
+
+                if (!string.IsNullOrEmpty(deviceTwin.ModelId))
+                {
+                    DTDLModelResolver resolver = new DTDLModelResolver(_privateModelRepoUrl, _privateModelToken, _logger);
+
+                    var modelData = await resolver.ParseModelAsync(deviceTwin.ModelId);
+
+                    var interfaces = modelData.Where(r => r.Value.EntityKind == DTEntityKind.Command).ToList();
+
+                    //var commands = interfaces.Select(r => r.Value as DTCommandInfo).Where(x => x.Name == command).ToList();
+                    var dtCmd = interfaces.Select(r => r.Value as DTCommandInfo).Single(x => x.Name == command);
+
+                    if (cmdPayload.ContainsKey(dtCmd.Request.Name))
+                    {
+                        switch (dtCmd.Request.Schema.EntityKind)
+                        {
+                            case DTEntityKind.String:
+                                methodInvocation.SetPayloadJson(new string(cmdPayload[dtCmd.Request.Name].ToString()));
+                                break;
+
+                            case DTEntityKind.Integer:
+                                if (cmdPayload[dtCmd.Request.Name].Type == JTokenType.String)
+                                {
+                                    var value = cmdPayload[dtCmd.Request.Name].ToString();
+
+                                    // convert to integer
+                                    Regex rx = new Regex(@"^[0-9]+$");
+
+                                    if (!rx.IsMatch(value))
+                                    {
+                                        var result = new CloudToDeviceMethodResult()
+                                        {
+                                            Status = 400,
+                                        };
+                                        return result;
+                                    }
+                                    else
+                                    {
+                                        methodInvocation.SetPayloadJson(Int32.Parse(value).ToString());
+                                    }
+                                }
+                                break;
+
+                            case DTEntityKind.Float:
+                            case DTEntityKind.Double:
+                                break;
+                        }
+                        //cmdPayload.
+                    }
+                }
+
+                try
+                {
+                    var response = await _serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
+                    Console.WriteLine("Response status: {0}, payload:", response.Status);
+                    Console.WriteLine(response.GetPayloadAsJson());
+                    return response;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Exception in GetIoTHubDevice() : {e.Message}");
+                }
             }
             return null;
         }

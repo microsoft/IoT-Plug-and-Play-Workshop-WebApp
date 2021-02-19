@@ -10,12 +10,17 @@
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Service" Version="1.17.0-preview-001" />
     <PackageReference Include="Microsoft.Azure.DigitalTwins.Parser" Version="3.12.5" />
     <PackageReference Include="Microsoft.Azure.EventGrid" Version="3.2.0" />
+    <PackageReference Include="Microsoft.Azure.Management.DeviceProvisioningServices" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.SignalR" Version="1.5.1" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.8" />
     <PackageReference Include="Microsoft.jQuery.Unobtrusive.Ajax" Version="3.2.6" />
     <PackageReference Include="Microsoft.jQuery.Unobtrusive.Validation" Version="3.2.11" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0-rc.2.20475.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CertFile\" />
   </ItemGroup>
 
 </Project>
