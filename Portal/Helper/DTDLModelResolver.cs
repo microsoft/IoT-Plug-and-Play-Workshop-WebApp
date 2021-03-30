@@ -63,6 +63,22 @@ namespace Portal.Helper
             return jsonModel;
         }
 
+        public async Task<IEnumerable<string>> DtmiResolver(IReadOnlyCollection<Dtmi>dtmis)
+        {
+            string modelContent = string.Empty;
+            List<string> resolvedModels = new List<string>();
+            foreach (var dtmi in dtmis)
+            {
+                string dtmiPath = DtmiToPath(dtmi.ToString());
+                if (!string.IsNullOrEmpty(dtmiPath))
+                {
+                    modelContent = await GetModelContentAsync(dtmiPath, false);
+                    resolvedModels.Add(modelContent);
+                }
+            }
+            return await Task.FromResult(resolvedModels);
+        }
+
         public async Task<IReadOnlyDictionary<Dtmi, DTEntityInfo>> ParseModelAsync(string dtmi)
         {
             string modelContent = string.Empty;
@@ -89,6 +105,7 @@ namespace Portal.Helper
                 try
                 {
                     ModelParser parser = new ModelParser();
+                    parser.DtmiResolver = DtmiResolver;
                     //parser.DtmiResolver = (IReadOnlyCollection<Dtmi> dtmis) =>
                     //{
                     //    foreach (Dtmi d in dtmis)
